@@ -1,0 +1,46 @@
+Brain dump from earlier today
+=============================
+
+my @candidate_cvs;
+
+Keyword plugin for "use":
+=> Needs to push @candidate_cvs, PL_compcv
+
+Check function of enter or leavesub or lineseq:
+=> To handle nested functions:
+=> Needs to check hints hash if our hint is active.
+=> If so, push @candidate_cvs, PL_compcv (validate that PL_compcv is set correctly!)
+
+Now, we have a list of candidate subs that might need "adjustment".
+
+If any of the above happen within eval "", push a UNITCHECK into the list of unitchecks to invoke scan_candidates()
+
+Install global CHECK that invokes scan_candidates()
+
+function scan_candidates will iterate through @candidate_cvs and walk their OP trees to find any COP with the $whatever hint set (and then call user callback).
+
+(TODO: prevent duplicate invocations of user callback by keeping a ptr table of visited CVs or so)
+
+
+Potential user interface?
+=========================
+
+package no_nextstate;
+use B::LexicalOPTreeHack;
+
+use constant MY_HINT => "no_nxtstt";
+B::LexicalOPTreeHack->register(+MY_HINT => sub {do things});
+
+sub import {
+  B::LexicalOPTreeHack->on_import(+MY_HINT);
+}
+...
+
+package main;
+
+sub foo {
+  {
+    use no_nextstate;
+    sub {...};
+  }
+}
