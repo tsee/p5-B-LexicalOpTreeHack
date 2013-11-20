@@ -35,7 +35,10 @@ my_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr)
           PL_unitcheckav = newAV();
       av_unshift(PL_unitcheckav, 1);
       /* TODO get_cv output can be cached */
-      av_store(PL_unitcheckav, 0, (SV *)get_cv("B::LexicalOpTreeHack::global_check_hook", 0));
+      SV *check_hook = (SV *)get_cv("B::LexicalOpTreeHack::global_check_hook", 0);
+      SvREFCNT_inc(check_hook);
+      if (!av_store(PL_unitcheckav, 0, check_hook))
+        SvREFCNT_dec(check_hook);
     }
 
     ret = (*LO_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
