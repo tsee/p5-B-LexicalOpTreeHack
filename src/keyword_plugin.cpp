@@ -29,8 +29,13 @@ my_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr)
     if (PL_compcv) /* FIXME better check for validity? */
       add_candidate_cv(aTHX_ PL_compcv);
 
+    /* If in eval, emit UNITCHECK */
     if (IN_EVAL) {
-      /* TODO if in eval, emit UNITCHECK */
+      if (!PL_unitcheckav)
+          PL_unitcheckav = newAV();
+      av_unshift(PL_unitcheckav, 1);
+      /* TODO get_cv output can be cached */
+      av_store(PL_unitcheckav, 0, (SV *)get_cv("B::LexicalOpTreeHack::global_check_hook", 0));
     }
 
     ret = (*LO_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
