@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "keyword_plugin.h"
+#include "candidate_cvs.h"
 
 %module{B::LexicalOpTreeHack};
 %package{B::LexicalOpTreeHack};
@@ -21,5 +22,10 @@ MODULE = B::LexicalOpTreeHack PACKAGE = B::LexicalOpTreeHack
 
 BOOT:
   init_keyword_plugin(aTHX);
+
+void
+global_check_hook()
+  CODE:
+    process_candidate_cvs(aTHX);
 
 %}

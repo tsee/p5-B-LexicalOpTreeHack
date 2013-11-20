@@ -7,6 +7,10 @@ our $VERSION = '0.01';
 require XSLoader;
 XSLoader::load("B::LexicalOpTreeHack", $VERSION);
 
+CHECK {
+  B::LexicalOpTreeHack::global_check_hook();
+}
+
 1;
 __END__
 

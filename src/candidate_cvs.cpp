@@ -16,3 +16,10 @@ add_candidate_cv(pTHX_ CV *cv)
   LO_candidate_cvs.insert(cv);
 }
 
+
+void
+process_candidate_cvs(pTHX)
+{
+  printf("TODO: should be churning through candidate CVs here!\n");
+  LO_candidate_cvs.clear();
+}

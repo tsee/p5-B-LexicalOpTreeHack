@@ -6,6 +6,7 @@
 
 void add_candidate_cv(pTHX_ CV *cv);
 
-/* TODO API to process candidates */
+void process_candidate_cvs(pTHX);
+
 
 #endif
