@@ -1,0 +1,16 @@
+*.swp
+*.swo
+*~
+*.bak
+Makefile
+Makefile.old
+blib/
+pm_to_blib
+*.o
+*.bs
+JIT.c
+MYMETA.*
+_build
+Build
+dev_Build.PL
+buildtmp/
