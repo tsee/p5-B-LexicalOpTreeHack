@@ -4,8 +4,10 @@
 #include <perl.h>
 #include "ppport.h"
 
+#include "candidate_cvs.h"
+
 /* For chaining the actual keyword plugin */
-int (*GLOBAL_next_keyword_plugin)(pTHX_ char *, STRLEN, OP **);
+int (*LO_next_keyword_plugin)(pTHX_ char *, STRLEN, OP **);
 
 static int my_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr);
 
@@ -13,7 +15,7 @@ static int my_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **o
 void
 init_keyword_plugin(pTHX)
 {
-  GLOBAL_next_keyword_plugin = PL_keyword_plugin;
+  LO_next_keyword_plugin = PL_keyword_plugin;
   PL_keyword_plugin = my_keyword_plugin;
 }
 
@@ -23,14 +25,14 @@ my_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr)
   int ret;
 
   if (keyword_len == 3 && memcmp(keyword_ptr, "use", 3) == 0) {
-    /*SAVETMPS;
-    parse(aTHX_ op_ptr);
-    ret = KEYWORD_PLUGIN_STMT;
-    FREETMPS;
-    */
-    ret = (*GLOBAL_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
+    /* TODO if in eval, emit UNITCHECK */
+
+    if (PL_compcv) /* FIXME better check for validity? */
+      add_candidate_cv(aTHX_ PL_compcv);
+
+    ret = (*LO_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
   } else {
-    ret = (*GLOBAL_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
+    ret = (*LO_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
   }
 
   return ret;
