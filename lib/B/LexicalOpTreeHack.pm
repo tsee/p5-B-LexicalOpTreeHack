@@ -1,5 +1,5 @@
 package B::LexicalOpTreeHack;
-use strict;
+use 5.12.0;
 use warnings;
 our $VERSION = '0.01';
 # ABSTRACT: frobnicates foobles
