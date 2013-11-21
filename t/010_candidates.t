@@ -8,8 +8,10 @@ BEGIN { $INC{"my_hack.pm"} = 1 }
 
 use B::LexicalOpTreeHack;
 
-sub import { B::LexicalOpTreeHack::enable(1) }
-sub unimport { B::LexicalOpTreeHack::enable(0) }
+BEGIN { B::LexicalOpTreeHack::register("my_hack", sub { print "Got: @_\n" }) };
+
+sub import { B::LexicalOpTreeHack::enable("my_hack", 1) }
+sub unimport { B::LexicalOpTreeHack::enable("my_hack", 0) }
 
 package main;
 
@@ -20,6 +22,11 @@ sub foo {
 
 sub bar {
   use my_hack;
+  no my_hack;
+  my $cb = sub {1};
+}
+
+sub baz {
   no my_hack;
   my $cb = sub {1};
 }

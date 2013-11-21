@@ -19,8 +19,6 @@
 
 %{
 
-MODULE = B::LexicalOpTreeHack PACKAGE = B::LexicalOpTreeHack
-
 BOOT:
   init_keyword_plugin(aTHX);
   init_nested_sub_check(aTHX);
@@ -31,3 +29,6 @@ global_check_hook()
     process_candidate_cvs(aTHX);
 
 %}
+
+%name{register} void register_hint(const char *hint, SV *callback);
+%name{enable} void enable_hint(const char *hint, bool enable);

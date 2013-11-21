@@ -4,10 +4,11 @@
 #include <EXTERN.h>
 #include <perl.h>
 
+void register_hint(const char *hint, SV *callback);
+void enable_hint(const char *hint, bool enable);
 void add_candidate_cv(pTHX_ CV *cv);
+void add_candidate_cv_if_hint_enabled(pTHX_ CV *cv);
 
 void process_candidate_cvs(pTHX);
-
-bool is_hint_enabled(pTHX);
 
 #endif

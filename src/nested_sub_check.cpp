@@ -23,8 +23,8 @@ init_nested_sub_check(pTHX)
 static OP *
 my_leavesub_check(pTHX_ OP *op)
 {
-  if (PL_compcv && is_hint_enabled(aTHX))
-    add_candidate_cv(aTHX_ PL_compcv);
+  if (PL_compcv)
+    add_candidate_cv_if_hint_enabled(aTHX_ PL_compcv);
 
   return original_leavesub_check(aTHX_ op);
 }
@@ -33,8 +33,8 @@ my_leavesub_check(pTHX_ OP *op)
 static OP *
 my_leavesublv_check(pTHX_ OP *op)
 {
-  if (PL_compcv && is_hint_enabled(aTHX))
-    add_candidate_cv(aTHX_ PL_compcv);
+  if (PL_compcv)
+    add_candidate_cv_if_hint_enabled(aTHX_ PL_compcv);
 
   return original_leavesublv_check(aTHX_ op);
 }

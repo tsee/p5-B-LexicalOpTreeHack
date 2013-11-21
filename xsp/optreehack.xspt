@@ -1,3 +1,5 @@
+%typemap{SV *}{simple};
+
 %typemap{CV *}{simple}{
     %xs_type{T_CV};
     %xs_input_code{%
