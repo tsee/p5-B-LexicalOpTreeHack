@@ -43,6 +43,13 @@ enable_hint(const char *hint, bool enable)
 
   if (value)
     sv_setiv_mg(*value, enable);
+
+  if (enable && CvSPECIAL(PL_compcv)) {
+    HintMap::iterator entry = LO_handlers.find(full_name);
+
+    if (entry != LO_handlers.end())
+      entry->second.candidate_cvs.insert(CvOUTSIDE(PL_compcv));
+  }
 }
 
 

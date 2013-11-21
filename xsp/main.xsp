@@ -20,7 +20,7 @@
 %{
 
 BOOT:
-  init_keyword_plugin(aTHX);
+  // init_keyword_plugin(aTHX);
   init_nested_sub_check(aTHX);
 
 void
