@@ -5,6 +5,7 @@
 #include "ppport.h"
 
 #include <set>
+#include <string>
 
 using namespace std;
 
@@ -22,6 +23,20 @@ add_candidate_cv(pTHX_ CV *cv)
 }
 
 
+static std::string
+get_cv_name(pTHX_ CV *cv)
+{
+  if (CvGV(cv))
+    return string(GvNAME(CvGV(cv)));
+#if PERL_VERSION >= 18
+  else if (CvNAME_HEK(*it))
+    return string(CvNAME_HEK(cv)->hek_key);
+#endif
+  else
+    return string("eval/main");
+}
+
+
 void
 process_candidate_cvs(pTHX)
 {
@@ -30,14 +45,8 @@ process_candidate_cvs(pTHX)
 
   for (iterator it = LO_candidate_cvs.begin(), end = LO_candidate_cvs.end();
        it != end; ++it) {
-    if (CvGV(*it))
-      printf("  CV: %s\n", GvNAME(CvGV(*it)));
-#if PERL_VERSION >= 18
-    else if (CvNAME_HEK(*it))
-      printf("  CV: %s\n", CvNAME_HEK(*it)->hek_key);
-#endif
-    else
-      printf("  eval/main\n");
+
+    printf("  CV: %s\n", get_cv_name(aTHX_ *it).c_str());
   }
   LO_candidate_cvs.clear();
 }
@@ -51,3 +60,4 @@ is_hint_enabled(pTHX)
 
   return hint != &PL_sv_placeholder && SvTRUE(hint);
 }
+
