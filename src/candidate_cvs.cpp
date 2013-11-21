@@ -13,6 +13,11 @@ static set<CV *> LO_candidate_cvs;
 void
 add_candidate_cv(pTHX_ CV *cv)
 {
+  // TODO for now ignore all special blocks, since most of them are
+  // going to be freed early; we might still want to apply the rewrite
+  // to END blocks
+  if (CvSPECIAL(cv))
+    return;
   LO_candidate_cvs.insert(cv);
 }
 
