@@ -25,6 +25,19 @@ add_candidate_cv(pTHX_ CV *cv)
 void
 process_candidate_cvs(pTHX)
 {
-  printf("TODO: should be churning through candidate CVs here!\n");
+  typedef set<CV *>::const_iterator iterator;
+  printf("TODO: should be churning through %d candidate CVs here!\n", LO_candidate_cvs.size());
+
+  for (iterator it = LO_candidate_cvs.begin(), end = LO_candidate_cvs.end();
+       it != end; ++it) {
+    if (CvGV(*it))
+      printf("  CV: %s\n", GvNAME(CvGV(*it)));
+#if PERL_VERSION >= 18
+    else if (CvNAME_HEK(*it))
+      printf("  CV: %s\n", CvNAME_HEK(*it)->hek_key);
+#endif
+    else
+      printf("  eval/main\n");
+  }
   LO_candidate_cvs.clear();
 }
