@@ -41,3 +41,13 @@ process_candidate_cvs(pTHX)
   }
   LO_candidate_cvs.clear();
 }
+
+
+bool
+is_hint_enabled(pTHX)
+{
+  // TODO add API to register hints
+  SV *hint = cophh_fetch_pvn(PL_compiling.cop_hints_hash, "lexical_optree_hack", 19, 0, 0);
+
+  return hint != &PL_sv_placeholder && SvTRUE(hint);
+}

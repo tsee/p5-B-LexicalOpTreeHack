@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "keyword_plugin.h"
+#include "nested_sub_check.h"
 #include "candidate_cvs.h"
 
 %module{B::LexicalOpTreeHack};
@@ -22,6 +23,7 @@ MODULE = B::LexicalOpTreeHack PACKAGE = B::LexicalOpTreeHack
 
 BOOT:
   init_keyword_plugin(aTHX);
+  init_nested_sub_check(aTHX);
 
 void
 global_check_hook()

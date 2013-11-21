@@ -8,5 +8,6 @@ void add_candidate_cv(pTHX_ CV *cv);
 
 void process_candidate_cvs(pTHX);
 
+bool is_hint_enabled(pTHX);
 
 #endif

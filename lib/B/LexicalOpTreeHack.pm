@@ -11,6 +11,10 @@ CHECK {
   B::LexicalOpTreeHack::global_check_hook();
 }
 
+sub enable {
+  $^H{lexical_optree_hack} = $_[0];
+}
+
 1;
 __END__
 
