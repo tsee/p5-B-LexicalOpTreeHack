@@ -20,6 +20,7 @@
 
 BOOT:
   init_nested_sub_check(aTHX);
+  init_candidate_structures(aTHX);
 
 void
 global_check_hook()
@@ -28,7 +29,9 @@ global_check_hook()
 
 %}
 
-%name{register} void register_hint(const char *hint, SV *callback);
+%name{register} void register_hint(const char *hint, SV *callback)
+  %code{% register_hint(aTHX_ hint, callback); %};
+
 %name{enable} void enable_hint(const char *hint, bool enable)
   %code{% enable_hint(aTHX_ hint, enable); %};
 

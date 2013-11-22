@@ -2,6 +2,7 @@
 
 #include <EXTERN.h>
 #include <perl.h>
+#include <XSUB.h>
 #include "ppport.h"
 
 #include <set>
@@ -21,15 +22,33 @@ struct HintInfo
 
 typedef map<string, HintInfo> HintMap;
 
-static HintMap LO_handlers; // needs to be per-interpreter
+#define MY_CXT_KEY "lexical_optree_hack"
+typedef struct {
+  HintMap *hint_handlers;
+} my_cxt_t;
+
+START_MY_CXT
+
+//static HintMap LO_handlers; // needs to be per-interpreter
 static const string LO_prefix = "lexical_optree_hack/";
 
 void
-register_hint(const char *hint, SV *callback)
+init_candidate_structures(pTHX)
+{
+  MY_CXT_INIT;
+  MY_CXT.hint_handlers = new HintMap();
+  // TODO eventually, there should be a call_atexit sort of cleanup hook for this structure
+}
+
+void
+register_hint(pTHX_ const char *hint, SV *callback)
 {
   string full_name = LO_prefix + hint;
 
-  if (!LO_handlers.insert(make_pair(full_name, HintInfo(callback))).second)
+  dMY_CXT;
+  HintMap &handlers = *MY_CXT.hint_handlers;
+
+  if (!handlers.insert(make_pair(full_name, HintInfo(callback))).second)
     croak("Hint '%s' already registered", hint);
   SvREFCNT_inc(callback);
 }
@@ -44,10 +63,13 @@ enable_hint(pTHX_ const char *hint, bool enable)
   if (value)
     sv_setiv_mg(*value, enable);
 
-  if (enable && CvSPECIAL(PL_compcv)) {
-    HintMap::iterator entry = LO_handlers.find(full_name);
+  dMY_CXT;
+  HintMap &handlers = *MY_CXT.hint_handlers;
 
-    if (entry != LO_handlers.end())
+  if (enable && CvSPECIAL(PL_compcv)) {
+    HintMap::iterator entry = handlers.find(full_name);
+
+    if (entry != handlers.end())
       entry->second.candidate_cvs.insert(CvOUTSIDE(PL_compcv));
   }
 }
@@ -62,7 +84,10 @@ add_candidate_cv(pTHX_ CV *cv)
   if (CvSPECIAL(cv))
     return;
 
-  for (HintMap::iterator handler = LO_handlers.begin(), end = LO_handlers.end();
+  dMY_CXT;
+  HintMap &handlers = *MY_CXT.hint_handlers;
+
+  for (HintMap::iterator handler = handlers.begin(), end = handlers.end();
        handler != end; ++handler)
     handler->second.candidate_cvs.insert(cv);
 }
@@ -74,7 +99,10 @@ add_candidate_cv_if_hint_enabled(pTHX_ CV *cv)
   if (CvSPECIAL(cv))
     return;
 
-  for (HintMap::iterator handler = LO_handlers.begin(), end = LO_handlers.end();
+  dMY_CXT;
+  HintMap &handlers = *MY_CXT.hint_handlers;
+
+  for (HintMap::iterator handler = handlers.begin(), end = handlers.end();
        handler != end; ++handler) {
     SV *hint = cophh_fetch_pvn(PL_compiling.cop_hints_hash,
                                handler->first.c_str(), handler->first.size(), 0, 0);
@@ -104,7 +132,10 @@ process_candidate_cvs(pTHX)
 {
   typedef set<CV *>::const_iterator iterator;
 
-  for (HintMap::iterator handler = LO_handlers.begin(), end = LO_handlers.end();
+  dMY_CXT;
+  HintMap &handlers = *MY_CXT.hint_handlers;
+
+  for (HintMap::iterator handler = handlers.begin(), end = handlers.end();
        handler != end; ++handler) {
     set<CV *> &candidate_cvs = handler->second.candidate_cvs;
 
