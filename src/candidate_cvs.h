@@ -5,7 +5,7 @@
 #include <perl.h>
 
 void register_hint(const char *hint, SV *callback);
-void enable_hint(const char *hint, bool enable);
+void enable_hint(pTHX_ const char *hint, bool enable);
 void add_candidate_cv(pTHX_ CV *cv);
 void add_candidate_cv_if_hint_enabled(pTHX_ CV *cv);
 
