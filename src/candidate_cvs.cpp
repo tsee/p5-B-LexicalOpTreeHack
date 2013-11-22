@@ -29,7 +29,6 @@ typedef struct {
 
 START_MY_CXT
 
-//static HintMap LO_handlers; // needs to be per-interpreter
 static const string LO_prefix = "lexical_optree_hack/";
 
 
@@ -87,24 +86,6 @@ enable_hint(pTHX_ const char *hint, bool enable)
 
 
 void
-add_candidate_cv(pTHX_ CV *cv)
-{
-  // TODO for now ignore all special blocks, since most of them are
-  // going to be freed early; we might still want to apply the rewrite
-  // to END blocks
-  if (CvSPECIAL(cv))
-    return;
-
-  dMY_CXT;
-  HintMap &handlers = *MY_CXT.hint_handlers;
-
-  for (HintMap::iterator handler = handlers.begin(), end = handlers.end();
-       handler != end; ++handler)
-    handler->second.candidate_cvs.insert(cv);
-}
-
-
-void
 add_candidate_cv_if_hint_enabled(pTHX_ CV *cv)
 {
   if (CvSPECIAL(cv))
@@ -121,20 +102,6 @@ add_candidate_cv_if_hint_enabled(pTHX_ CV *cv)
     if (hint != &PL_sv_placeholder && SvTRUE(hint))
       handler->second.candidate_cvs.insert(cv);
   }
-}
-
-
-static std::string
-get_cv_name(pTHX_ CV *cv)
-{
-  if (CvGV(cv))
-    return string(GvNAME(CvGV(cv)));
-#if PERL_VERSION >= 18
-  else if (CvNAME_HEK(*it))
-    return string(CvNAME_HEK(cv)->hek_key);
-#endif
-  else
-    return string("eval/main");
 }
 
 
