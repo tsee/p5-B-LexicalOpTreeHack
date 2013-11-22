@@ -32,13 +32,24 @@ START_MY_CXT
 //static HintMap LO_handlers; // needs to be per-interpreter
 static const string LO_prefix = "lexical_optree_hack/";
 
+
+static void
+teardown_candidate_structures(pTHX_ void *ptr)
+{
+  (void)ptr;
+  dMY_CXT;
+  delete MY_CXT.hint_handlers;
+}
+
+
 void
 init_candidate_structures(pTHX)
 {
   MY_CXT_INIT;
   MY_CXT.hint_handlers = new HintMap();
-  // TODO eventually, there should be a call_atexit sort of cleanup hook for this structure
+  Perl_call_atexit(aTHX_ teardown_candidate_structures, NULL);
 }
+
 
 void
 register_hint(pTHX_ const char *hint, SV *callback)

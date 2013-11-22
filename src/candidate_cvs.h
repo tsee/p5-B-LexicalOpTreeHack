@@ -5,6 +5,7 @@
 #include <perl.h>
 
 void init_candidate_structures(pTHX);
+
 void register_hint(pTHX_ const char *hint, SV *callback);
 void enable_hint(pTHX_ const char *hint, bool enable);
 void add_candidate_cv(pTHX_ CV *cv);
