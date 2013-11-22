@@ -10,7 +10,6 @@
 
 #include <assert.h>
 
-#include "keyword_plugin.h"
 #include "nested_sub_check.h"
 #include "candidate_cvs.h"
 
@@ -20,7 +19,6 @@
 %{
 
 BOOT:
-  // init_keyword_plugin(aTHX);
   init_nested_sub_check(aTHX);
 
 void
