@@ -75,12 +75,18 @@ enable_hint(pTHX_ const char *hint, bool enable)
 
   dMY_CXT;
   HintMap &handlers = *MY_CXT.hint_handlers;
-
-  if (enable && CvSPECIAL(PL_compcv)) {
+  CV *compcv = PL_compcv;
+  // in older Perls, PL_compiling points to the BEGIN block being executed,
+  // and we need to reach to the compiling subroutine through CvOUTSIDE.
+  // Perls newer than 5.17.5 (commit 85ffec368212c6) fixed that.
+#if PERL_VERSION < 18
+  compiling = CvOUTSIDE(compcv);
+#endif
+  if (enable) {
     HintMap::iterator entry = handlers.find(full_name);
 
     if (entry != handlers.end())
-      entry->second.candidate_cvs.insert(CvOUTSIDE(PL_compcv));
+      entry->second.candidate_cvs.insert(compcv);
   }
 }
 
