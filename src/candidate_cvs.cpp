@@ -125,6 +125,8 @@ process_candidate_cvs(pTHX)
   for (HintMap::iterator handler = handlers.begin(), end = handlers.end();
        handler != end; ++handler) {
     set<CV *> &candidate_cvs = handler->second.candidate_cvs;
+    if (!candidate_cvs.size())
+      return;
 
     dSP;
 
