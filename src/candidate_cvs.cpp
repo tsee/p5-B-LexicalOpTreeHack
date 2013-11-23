@@ -67,6 +67,9 @@ register_hint(pTHX_ const char *hint, SV *callback)
 void
 enable_hint(pTHX_ const char *hint, bool enable)
 {
+  if (!PL_compcv)
+    return;
+
   string full_name = LO_prefix + hint;
   SV **value = hv_fetch(GvHV(PL_hintgv), full_name.c_str(), full_name.size(), 1);
 
