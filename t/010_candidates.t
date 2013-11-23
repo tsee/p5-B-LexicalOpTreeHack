@@ -1,19 +1,6 @@
 #!/usr/bin/env perl
-use 5.12.0;
-use warnings;
-use Test::More;
 
-package my_hack;
-BEGIN { $INC{"my_hack.pm"} = 1 }
-
-use B::LexicalOpTreeHack;
-
-BEGIN { B::LexicalOpTreeHack::register("my_hack", sub { print "Got: @_\n" }) };
-
-sub import { B::LexicalOpTreeHack::enable("my_hack", 1) }
-sub unimport { B::LexicalOpTreeHack::enable("my_hack", 0) }
-
-package main;
+use t::lib::Test;
 
 sub foo {
   use my_hack;
@@ -31,5 +18,9 @@ sub baz {
   my $cb = sub {1};
 }
 
-pass();
+is(my_hack::called, 1);
+is_deeply([sort map cvname($_), my_hack::candidates],
+          [qw(__ANON__ bar foo)]);
+my_hack::reset;
+
 done_testing();
