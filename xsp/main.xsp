@@ -22,6 +22,17 @@ BOOT:
   init_nested_sub_check(aTHX);
   init_candidate_structures(aTHX);
 
+  if (!PL_main_start) {
+    SV *hook = (SV *) get_cv("B::LexicalOpTreeHack::global_check_hook", 0);
+    if (!PL_checkav)
+      PL_checkav = newAV();
+    av_unshift(PL_checkav, 1);
+
+    if (av_store(PL_checkav, 0, hook))
+      SvREFCNT_inc(hook);
+  }
+
+
 void
 global_check_hook()
   CODE:
