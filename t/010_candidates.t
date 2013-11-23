@@ -20,7 +20,30 @@ sub baz {
 
 is(my_hack::called, 1);
 is_deeply([sort map cvname($_), my_hack::candidates],
-          [qw(__ANON__ bar foo)]);
+          [qw(__ANON__ __MAIN__ bar foo)]);
+my_hack::reset;
+
+eval "sub moo1 { }; 1" or die $@;
+is(my_hack::called, 0);
+my_hack::reset;
+
+eval "use my_hack; sub moo2 { }; 1" or die $@;
+is(my_hack::called, 1);
+is_deeply([sort map cvname($_), my_hack::candidates],
+          [qw(__MAIN__ moo2)]);
+my_hack::reset;
+
+eval "sub moo3 { use my_hack; }; 1" or die $@;
+is(my_hack::called, 1);
+is_deeply([sort map cvname($_), my_hack::candidates],
+          [qw(moo3)]);
+my_hack::reset;
+
+use my_hack;
+eval "sub moo4 { }; 1" or die $@;
+is(my_hack::called, 1);
+is_deeply([sort map cvname($_), my_hack::candidates],
+          [qw(__MAIN__ moo4)]);
 my_hack::reset;
 
 done_testing();

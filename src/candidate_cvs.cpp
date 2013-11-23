@@ -25,12 +25,15 @@ typedef map<string, HintInfo> HintMap;
 #define MY_CXT_KEY "lexical_optree_hack"
 typedef struct {
   HintMap *hint_handlers;
+  SV *check_hook;
 } my_cxt_t;
 
 START_MY_CXT
 
 static const string LO_prefix = "lexical_optree_hack/";
 
+static void
+add_unitcheck_block(pTHX_ pMY_CXT);
 
 static void
 teardown_candidate_structures(pTHX_ void *ptr)
@@ -38,6 +41,7 @@ teardown_candidate_structures(pTHX_ void *ptr)
   (void)ptr;
   dMY_CXT;
   delete MY_CXT.hint_handlers;
+  SvREFCNT_dec(MY_CXT.check_hook);
 }
 
 
@@ -46,6 +50,8 @@ init_candidate_structures(pTHX)
 {
   MY_CXT_INIT;
   MY_CXT.hint_handlers = new HintMap();
+  MY_CXT.check_hook = (SV *) get_cv("B::LexicalOpTreeHack::global_check_hook", 0);
+  SvREFCNT_inc(MY_CXT.check_hook);
   Perl_call_atexit(aTHX_ teardown_candidate_structures, NULL);
 }
 
@@ -95,13 +101,14 @@ enable_hint(pTHX_ const char *hint, bool enable)
 
 
 void
-add_candidate_cv_if_hint_enabled(pTHX_ CV *cv)
+add_candidate_cv_if_hint_enabled(pTHX_ CV *cv, bool is_eval)
 {
   if (CvSPECIAL(cv))
     return;
 
   dMY_CXT;
   HintMap &handlers = *MY_CXT.hint_handlers;
+  bool call_callback = false;
 
   for (HintMap::iterator handler = handlers.begin(), end = handlers.end();
        handler != end; ++handler) {
@@ -110,7 +117,11 @@ add_candidate_cv_if_hint_enabled(pTHX_ CV *cv)
 
     if (hint != &PL_sv_placeholder && SvTRUE(hint))
       handler->second.candidate_cvs.insert(cv);
+    call_callback = call_callback || handler->second.candidate_cvs.size();
   }
+
+  if (is_eval && call_callback)
+    add_unitcheck_block(aTHX_ aMY_CXT);
 }
 
 
@@ -149,4 +160,16 @@ process_candidate_cvs(pTHX)
 
     candidate_cvs.clear();
   }
+}
+
+
+static void
+add_unitcheck_block(pTHX_ pMY_CXT)
+{
+  if (!PL_unitcheckav)
+    PL_unitcheckav = newAV();
+  av_unshift(PL_unitcheckav, 1);
+
+  if (av_store(PL_unitcheckav, 0, MY_CXT.check_hook))
+    SvREFCNT_inc(MY_CXT.check_hook);
 }

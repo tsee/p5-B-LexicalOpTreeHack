@@ -8,7 +8,7 @@ void init_candidate_structures(pTHX);
 
 void register_hint(pTHX_ const char *hint, SV *callback);
 void enable_hint(pTHX_ const char *hint, bool enable);
-void add_candidate_cv_if_hint_enabled(pTHX_ CV *cv);
+void add_candidate_cv_if_hint_enabled(pTHX_ CV *cv, bool is_eval);
 
 void process_candidate_cvs(pTHX);
 
