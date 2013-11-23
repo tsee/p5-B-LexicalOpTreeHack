@@ -11,7 +11,7 @@ require feature;
 
 our @EXPORT = (
   @Test::More::EXPORT,
-  qw(cvname)
+  qw(cvname),
 );
 
 sub import {
@@ -25,10 +25,13 @@ sub import {
 }
 
 sub cvname {
-  my $gv = B::svref_2object($_[0])->GV;
-
-  return '__MAIN__' if $gv->isa('B::SPECIAL');
-  return $gv->NAME;
+    if ($_[0]->type == B::LexicalOpTreeHack::hinted_sub()) {
+        return B::svref_2object($_[0]->cv)->GV->NAME;
+    } elsif ($_[0]->type == B::LexicalOpTreeHack::hinted_eval()) {
+        return '__EVAL__';
+    } else {
+        return '__MAIN__';
+    }
 }
 
 1;

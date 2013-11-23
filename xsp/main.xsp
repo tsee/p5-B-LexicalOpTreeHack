@@ -12,6 +12,7 @@
 
 #include "nested_sub_check.h"
 #include "candidate_cvs.h"
+#include "api_helpers.h"
 
 %module{B::LexicalOpTreeHack};
 %package{B::LexicalOpTreeHack};
@@ -19,6 +20,7 @@
 %{
 
 BOOT:
+  define_constants(aTHX);
   init_nested_sub_check(aTHX);
   init_candidate_structures(aTHX);
 
@@ -46,3 +48,16 @@ global_check_hook()
 %name{enable} void enable_hint(const char *hint, bool enable)
   %code{% enable_hint(aTHX_ hint, enable); %};
 
+%name{B::LexicalOpTreeHack::HintedCode} class HintedCode
+{
+  %accessors{
+    %get_style{no_prefix};
+  };
+
+  ~HintedCode();
+
+  CV *cv %get;
+  OP *root %get;
+  OP *start %get;
+  HintedCodeType type %get;
+};

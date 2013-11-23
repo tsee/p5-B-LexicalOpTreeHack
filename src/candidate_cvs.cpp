@@ -5,6 +5,8 @@
 #include <XSUB.h>
 #include "ppport.h"
 
+#include "api_helpers.h"
+
 #include <set>
 #include <map>
 #include <string>
@@ -148,8 +150,31 @@ process_candidate_cvs(pTHX)
     PUSHMARK(SP);
 
     for (iterator it = candidate_cvs.begin(), end = candidate_cvs.end();
-         it != end; ++it)
-      PUSHs(sv_2mortal(newRV_inc((SV *) *it)));
+         it != end; ++it) {
+      HintedCode *code = new HintedCode();
+      CV *cv = *it;
+
+      if (!CvEVAL(cv)) {
+        code->cv = cv;
+        code->type = hinted_sub;
+        code->start = CvSTART(cv);
+        code->root = CvROOT(cv);
+      } else if (CvOUTSIDE(cv)) {
+        code->cv = 0;
+        code->type = hinted_eval;
+        code->start = PL_eval_start;
+        code->root = PL_eval_root;
+      } else {
+        code->cv = 0;
+        code->type = hinted_main;
+        code->start = PL_main_start;
+        code->root = PL_main_root;
+      }
+
+      SV *obj = sv_setref_pv(sv_newmortal(), "B::LexicalOpTreeHack::HintedCode", code);
+
+      PUSHs(obj);
+    }
 
     PUTBACK;
 

@@ -1,4 +1,10 @@
+%loadplugin{feature::default_xs_typemap};
+
 %typemap{SV *}{simple};
+
+%typemap{HintedCodeType}{simple}{
+    %xs_type{T_ENUM};
+};
 
 %typemap{CV *}{simple}{
     %xs_type{T_CV};
@@ -8,6 +14,9 @@
         }
         else
             croak(\"$var is not a code reference\")
+    %};
+    %xs_output_code{%
+        $arg = newRV_inc((SV *) $var);
     %};
 };
 
