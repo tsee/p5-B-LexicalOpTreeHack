@@ -64,6 +64,9 @@ global_check_hook()
 
   ~HintedCode();
 
+  std::vector<OP *> hinted_cops(char *hint_name = NULL) const
+    %code{% RETVAL = THIS->hinted_cops(aTHX_ hint_name); %};
+
   CV *cv %get;
   OP *root %get;
   OP *start %get;

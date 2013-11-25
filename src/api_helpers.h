@@ -3,6 +3,7 @@
 
 #include <EXTERN.h>
 #include <perl.h>
+#include <vector>
 
 void define_constants(pTHX);
 
@@ -13,8 +14,13 @@ enum HintedCodeType
   hinted_main
 };
 
-struct HintedCode
+class HintedCode
 {
+public:
+  HintedCode() {}
+
+  std::vector<OP *> hinted_cops(pTHX_ const char *hint_name) const;
+
   CV *cv;
   OP *root;
   OP *start;

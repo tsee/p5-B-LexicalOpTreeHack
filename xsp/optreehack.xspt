@@ -35,3 +35,17 @@
         sv_setiv(newSVrv($arg, "B::OP"), PTR2IV($var));
     %};
 };
+
+%typemap{std::vector<OP *>}{simple}{
+    %xs_type{T_VECTOR_OP};
+    %xs_output_code{%
+        AV *av = newAV();
+        $arg = newRV_noinc((SV *)av);
+        for (std::vector<OP *>::const_iterator it = $var.begin(); it != $var.end(); ++it)
+        {
+            SV *rv = newSV(0);
+            sv_setiv(newSVrv(rv, "B::OP"), PTR2IV(*it));
+            av_push(av, rv);
+        }
+    %};
+};

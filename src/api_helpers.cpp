@@ -1,6 +1,7 @@
 #include "api_helpers.h"
 
 #include <string>
+#include <COPFinder.h>
 
 using namespace std;
 
@@ -34,3 +35,12 @@ define_constants(pTHX)
   INT_CONST(hinted_eval);
   INT_CONST(hinted_main);
 }
+
+std::vector<OP *>
+HintedCode::hinted_cops(pTHX_ const char *hint_name) const
+{
+    COPFinder copf(hint_name);
+    copf.visit(aTHX_ root, root);
+    return copf.get_cops();
+}
+
