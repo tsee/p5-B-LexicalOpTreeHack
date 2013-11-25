@@ -203,9 +203,9 @@ add_unitcheck_block(pTHX_ pMY_CXT)
 bool
 cop_has_hint(pTHX_ COP *cop, const char *hint)
 {
-  string full_name = LO_prefix + hint;
+  string full_name = LO_prefix + string(hint);
   // Annoying: This creates and returns a mortal SV every time :(
   SV *hint_value = cop_hints_fetch_pvn(cop, full_name.c_str(), full_name.length(), 0, 0);
-  return(hint_value && hint_value != &PL_sv_placeholder && SvOK(hint_value));
+  return(hint_value && hint_value != &PL_sv_placeholder && SvTRUE(hint_value));
 }
 
