@@ -10,6 +10,8 @@ void register_hint(pTHX_ const char *hint, SV *callback);
 void enable_hint(pTHX_ const char *hint, bool enable);
 void add_candidate_cv_if_hint_enabled(pTHX_ CV *cv, bool is_eval);
 
+bool cop_has_hint(pTHX_ COP *cop, const char *hint_name);
+
 void process_candidate_cvs(pTHX);
 
 #endif

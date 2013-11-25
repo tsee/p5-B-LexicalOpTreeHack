@@ -48,6 +48,14 @@ global_check_hook()
 %name{enable} void enable_hint(const char *hint, bool enable)
   %code{% enable_hint(aTHX_ hint, enable); %};
 
+%name{has_hint} bool cop_has_hint(OP *cop, const char *hint)
+  %code{%
+    if (OP_CLASS(cop) != OA_COP)
+      RETVAL = false;
+    else
+      RETVAL = cop_has_hint(aTHX_ (COP *)cop, hint);
+  %};
+
 %name{B::LexicalOpTreeHack::HintedCode} class HintedCode
 {
   %accessors{

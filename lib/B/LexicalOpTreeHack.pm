@@ -6,7 +6,9 @@ our $VERSION = '0.01';
 
 use Exporter 'import';
 
-our @EXPORT_OK = qw();
+our @EXPORT_OK = qw(
+  has_hint
+);
 
 require XSLoader;
 XSLoader::load("B::LexicalOpTreeHack", $VERSION);
