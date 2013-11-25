@@ -91,7 +91,7 @@ enable_hint(pTHX_ const char *hint, bool enable)
   // and we need to reach to the compiling subroutine through CvOUTSIDE.
   // Perls newer than 5.17.5 (commit 85ffec368212c6) fixed that.
 #if PERL_VERSION < 18
-  compiling = CvOUTSIDE(compcv);
+  compcv = CvOUTSIDE(compcv);
 #endif
   if (enable) {
     HintMap::iterator entry = handlers.find(full_name);
