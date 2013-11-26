@@ -32,7 +32,7 @@ typedef struct {
 
 START_MY_CXT
 
-static const string LO_prefix = "lexical_optree_hack/";
+const string LO_prefix = "lexical_optree_hack/";
 
 static void
 add_unitcheck_block(pTHX_ pMY_CXT);

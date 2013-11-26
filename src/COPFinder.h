@@ -21,6 +21,8 @@ public:
 private:
   std::vector<OP *> cops;
   std::string *hint_name;
+  COPHH *prev_hints_hash;
+  bool prev_hh_had_hint;
 };
 
 #endif

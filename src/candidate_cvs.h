@@ -3,6 +3,9 @@
 
 #include <EXTERN.h>
 #include <perl.h>
+#include <string>
+
+extern const std::string LO_prefix;
 
 void init_candidate_structures(pTHX);
 
