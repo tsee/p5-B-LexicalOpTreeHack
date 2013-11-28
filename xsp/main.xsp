@@ -14,6 +14,9 @@
 #include "candidate_cvs.h"
 #include "api_helpers.h"
 
+// FIXME it's a hack that this is here at all
+#include "helemfast.h"
+
 %module{B::LexicalOpTreeHack};
 %package{B::LexicalOpTreeHack};
 
@@ -33,6 +36,9 @@ BOOT:
     if (av_store(PL_checkav, 0, hook))
       SvREFCNT_inc(hook);
   }
+  
+  // FIXME it's a hack that this is here
+  hf_init_global_state(aTHX);
 
 
 void

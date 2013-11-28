@@ -1,6 +1,7 @@
 %loadplugin{feature::default_xs_typemap};
 
 %typemap{SV *}{simple};
+%typemap{UV}{simple};
 
 %typemap{HintedCodeType}{simple}{
     %xs_type{T_ENUM};

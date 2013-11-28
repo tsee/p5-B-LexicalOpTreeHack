@@ -1,0 +1,8 @@
+%module{B::LexicalOpTreeHack};
+%package{helemfast};
+
+#include "helemfast.h"
+
+OP *prepare_helemfast_lex(UV padoffset, SV *key)
+  %code{% RETVAL = hf_prepare_helemfast_lex(aTHX_ padoffset, key); %};
+
