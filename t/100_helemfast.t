@@ -5,13 +5,16 @@ use lib 't/lib';
 use Test::More;
 
 sub foo {
-  use helemfast;
-  my %h = (1..2);
-  my $x = $h{1};
+  #use helemfast;
+  my %h = ("bar" => "baz");
+  my $x;
+  for (1..10000000) {
+    $x = $h{bar};
+  }
   return $x;
 }
 
-is(foo(), 2);
+is(foo(), "baz");
 
 pass("Alive");
 done_testing();

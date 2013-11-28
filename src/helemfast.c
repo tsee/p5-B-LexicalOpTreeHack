@@ -6,7 +6,9 @@ XOP HF_helemfast_lex_op;
 
 typedef struct {
   BASEOP
+  // Either one of the following may be used to identify the key
   SV *op_keysv;
+  PADOFFSET op_keyoffset;
   U32 op_keyhash;
 } helemfast_op_t;
 
@@ -36,7 +38,17 @@ hf_pp_helemfast_lex(pTHX)
   // FIXME lval
   const U32 lval = PL_op->op_flags & OPf_MOD;
   // FIXME there's likely a recent perl's hv_common_key_len or so that could be more efficient
-  HE * const ent = hv_fetch_ent(hv, ((helemfast_op_t *)PL_op)->op_keysv, lval, ((helemfast_op_t *)PL_op)->op_keyhash);
+  //sv_dump(((helemfast_op_t *)PL_op)->op_keysv);
+  // FIXME precompute hash. But that requires fetching the SV from an alien PAD earlier. Meh.
+  if (UNLIKELY(((helemfast_op_t *)PL_op)->op_keyhash == 0)) {
+    SV *t = PAD_SVl(((helemfast_op_t *)PL_op)->op_keyoffset);
+    STRLEN len;
+    char *s = SvPVbyte(t, len);
+    PERL_HASH((((helemfast_op_t *)PL_op)->op_keyhash), s, len);
+  }
+  HE * const ent = hv_fetch_ent(hv, PAD_SVl(((helemfast_op_t *)PL_op)->op_keyoffset), lval, ((helemfast_op_t *)PL_op)->op_keyhash);
+  // FIXME: Variant (below) which doesn't use the PAD.
+  //HE * const ent = hv_fetch_ent(hv, ((helemfast_op_t *)PL_op)->op_keysv, lval, ((helemfast_op_t *)PL_op)->op_keyhash);
   SV *sv = (ent ? HeVAL(ent) : &PL_sv_undef);
   EXTEND(SP, 1);
   if (!lval && SvRMAGICAL(hv) && SvGMAGICAL(sv)) /* see note in pp_helem() */
@@ -82,12 +94,28 @@ hf_alloc_helemfast(pTHX_ const bool is_lexical)
 }
 
 OP *
-hf_prepare_helemfast_lex(pTHX_ PADOFFSET padoffset, SV *key)
+hf_prepare_helemfast_lex(pTHX_ PADOFFSET hash_padoffset, SV *key)
 {
   helemfast_op_t *op = (helemfast_op_t *)hf_alloc_helemfast(aTHX_ true);
 
-  op->op_targ = padoffset;
+  // FIXME Does this need a SvREFCNT_inc(key) ?
+  op->op_targ = hash_padoffset;
   op->op_keysv = key;
+  op->op_keyoffset = 0;
+  op->op_keyhash = 0; // FIXME precompute hash key
+
+  return (OP *)op;
+}
+
+OP *
+hf_prepare_helemfast_lex_padkey(pTHX_ PADOFFSET hash_padoffset, PADOFFSET key_padoffset)
+{
+  helemfast_op_t *op = (helemfast_op_t *)hf_alloc_helemfast(aTHX_ true);
+
+  // FIXME Does this need a SvREFCNT_inc(key) ?
+  op->op_targ = hash_padoffset;
+  op->op_keysv = NULL;
+  op->op_keyoffset = key_padoffset;
   op->op_keyhash = 0; // FIXME precompute hash key
 
   return (OP *)op;

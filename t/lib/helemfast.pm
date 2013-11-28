@@ -24,7 +24,15 @@ sub _replace_helem {
         my $sassign = $cop->sibling;
         next if not $sassign or $sassign->name ne 'sassign';
         my $helem = $sassign->first;
-        my $helemfast = helemfast::prepare_helemfast_lex($helem->first->targ, $helem->last->sv);
+        use Devel::Peek;
+        my $helemfast;
+        my $keysv = $helem->last->sv;
+        if (ref($keysv)) { # B::Special => really a NULL => ithreads
+          $helemfast = helemfast::prepare_helemfast_lex_padkey($helem->first->targ, $helem->last->targ);
+        }
+        else {
+          $helemfast = helemfast::prepare_helemfast_lex($helem->first->targ, $helem->last->sv);
+        }
         warn "# alive";
         replace_tree($code->cv, $helem, $helemfast);
       }
