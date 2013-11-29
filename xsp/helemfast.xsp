@@ -3,8 +3,8 @@
 
 #include "helemfast.h"
 
-OP *prepare_helemfast_lex(UV hash_padoffset, SV *key)
-  %code{% RETVAL = hf_prepare_helemfast_lex(aTHX_ hash_padoffset, key); %};
+OP *prepare_helemfast_lex(CV *func, UV hash_padoffset, SV *key)
+  %code{% RETVAL = hf_prepare_helemfast_lex(aTHX_ func, hash_padoffset, key); %};
 
-OP *prepare_helemfast_lex_padkey(UV hash_padoffset, UV key_padoffset)
-  %code{% RETVAL = hf_prepare_helemfast_lex_padkey(aTHX_ hash_padoffset, key_padoffset); %};
+OP *prepare_helemfast_lex_padkey(CV *func, UV hash_padoffset, UV key_padoffset)
+  %code{% RETVAL = hf_prepare_helemfast_lex_padkey(aTHX_ func, hash_padoffset, key_padoffset); %};

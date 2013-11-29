@@ -28,12 +28,11 @@ sub _replace_helem {
         my $helemfast;
         my $keysv = $helem->last->sv;
         if (ref($keysv)) { # B::Special => really a NULL => ithreads
-          $helemfast = helemfast::prepare_helemfast_lex_padkey($helem->first->targ, $helem->last->targ);
+          $helemfast = helemfast::prepare_helemfast_lex_padkey($code->cv, $helem->first->targ, $helem->last->targ);
         }
         else {
-          $helemfast = helemfast::prepare_helemfast_lex($helem->first->targ, $helem->last->sv);
+          $helemfast = helemfast::prepare_helemfast_lex($code->cv, $helem->first->targ, $helem->last->sv);
         }
-        warn "# alive";
         replace_tree($code->cv, $helem, $helemfast);
       }
     }

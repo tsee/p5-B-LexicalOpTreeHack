@@ -5,10 +5,10 @@ use lib 't/lib';
 use Test::More;
 
 sub foo {
-  #use helemfast;
-  my %h = ("bar" => "baz");
+  use helemfast;
+  my %h = (bar => "baz");
   my $x;
-  for (1..10000000) {
+  for (1..1000000) {
     $x = $h{bar};
   }
   return $x;

@@ -1,8 +1,19 @@
 #include "helemfast.h"
 
+/* From B::Generate */
+#ifndef PadARRAY
+# if PERL_VERSION < 8 || (PERL_VERSION == 8 && !PERL_SUBVERSION)
+typedef AV PADLIST;
+typedef AV PAD;
+# endif
+# define PadlistARRAY(pl)	((PAD **)AvARRAY(pl))
+# define PadlistNAMES(pl)	(*PadlistARRAY(pl))
+# define PadARRAY		AvARRAY
+#endif
+ 
 XOP HF_helemfast_op;
 XOP HF_helemfast_lex_op;
-//Perl_ophook_t HF_orig_opfreehook;
+XOP HF_helemfast_lex_pad_op;
 
 typedef struct {
   BASEOP
@@ -22,9 +33,26 @@ hf_pp_helemfast(pTHX)
   const U32 lval = PL_op->op_flags & OPf_MOD;
   // FIXME there's likely a recent perl's hv_common_key_len or so that could be more efficient
   HE * const ent = hv_fetch_ent(hv, ((helemfast_op_t *)PL_op)->op_keysv, lval, ((helemfast_op_t *)PL_op)->op_keyhash);
-  SV *sv = (ent ? HeVAL(ent) : &PL_sv_undef);
+  SV *sv = HeVAL(ent);
   EXTEND(SP, 1);
   if (!lval && SvRMAGICAL(hv) && SvGMAGICAL(sv)) /* see note in pp_helem() */
+      mg_get(sv);
+  PUSHs(sv);
+  RETURN;
+}
+
+static OP *
+hf_pp_helemfast_lex_pad(pTHX)
+{
+  dVAR; dSP;
+  HV * const hv = MUTABLE_HV(PAD_SV(PL_op->op_targ));
+  // FIXME lval was patched out of this for performance testing
+  // FIXME there's likely a recent perl's hv_common_key_len or so that could be more efficient
+  //sv_dump(((helemfast_op_t *)PL_op)->op_keysv);
+  HE * const ent = hv_fetch_ent(hv, PAD_SVl(((helemfast_op_t *)PL_op)->op_keyoffset), 0, ((helemfast_op_t *)PL_op)->op_keyhash);
+  SV *sv = HeVAL(ent);
+  EXTEND(SP, 1);
+  if (SvRMAGICAL(hv) && SvGMAGICAL(sv)) /* see note in pp_helem() */
       mg_get(sv);
   PUSHs(sv);
   RETURN;
@@ -39,17 +67,8 @@ hf_pp_helemfast_lex(pTHX)
   const U32 lval = PL_op->op_flags & OPf_MOD;
   // FIXME there's likely a recent perl's hv_common_key_len or so that could be more efficient
   //sv_dump(((helemfast_op_t *)PL_op)->op_keysv);
-  // FIXME precompute hash. But that requires fetching the SV from an alien PAD earlier. Meh.
-  if (UNLIKELY(((helemfast_op_t *)PL_op)->op_keyhash == 0)) {
-    SV *t = PAD_SVl(((helemfast_op_t *)PL_op)->op_keyoffset);
-    STRLEN len;
-    char *s = SvPVbyte(t, len);
-    PERL_HASH((((helemfast_op_t *)PL_op)->op_keyhash), s, len);
-  }
-  HE * const ent = hv_fetch_ent(hv, PAD_SVl(((helemfast_op_t *)PL_op)->op_keyoffset), lval, ((helemfast_op_t *)PL_op)->op_keyhash);
-  // FIXME: Variant (below) which doesn't use the PAD.
-  //HE * const ent = hv_fetch_ent(hv, ((helemfast_op_t *)PL_op)->op_keysv, lval, ((helemfast_op_t *)PL_op)->op_keyhash);
-  SV *sv = (ent ? HeVAL(ent) : &PL_sv_undef);
+  HE * const ent = hv_fetch_ent(hv, ((helemfast_op_t *)PL_op)->op_keysv, lval, ((helemfast_op_t *)PL_op)->op_keyhash);
+  SV *sv = HeVAL(ent);
   EXTEND(SP, 1);
   if (!lval && SvRMAGICAL(hv) && SvGMAGICAL(sv)) /* see note in pp_helem() */
       mg_get(sv);
@@ -57,21 +76,8 @@ hf_pp_helemfast_lex(pTHX)
   RETURN;
 }
 
-/* Hook that will free the OP aux structure of our custom ops */
-/*void
-hf_op_free_hook(pTHX_ OP *o)
-{
-  if (HF_orig_opfreehook != NULL)
-    HF_orig_opfreehook(aTHX_ o);
-
-  if (o->op_ppaddr == hf_pp_helemfast_lex || o->op_ppaddr == hf_pp_helemfast)
-  {
-  }
-}
-*/
-
 static OP *
-hf_alloc_helemfast(pTHX_ const bool is_lexical)
+hf_alloc_helemfast(pTHX_ const bool is_lexical, const bool use_padoffset)
 {
   helemfast_op_t *op;
 
@@ -85,8 +91,12 @@ hf_alloc_helemfast(pTHX_ const bool is_lexical)
   op->op_keysv = NULL;
   op->op_keyhash = 0;
 
-  if (is_lexical)
-    op->op_ppaddr = hf_pp_helemfast_lex;
+  if (is_lexical) {
+    if (use_padoffset)
+      op->op_ppaddr = hf_pp_helemfast_lex_pad;
+    else
+      op->op_ppaddr = hf_pp_helemfast_lex;
+  }
   else
     op->op_ppaddr = hf_pp_helemfast;
 
@@ -94,29 +104,50 @@ hf_alloc_helemfast(pTHX_ const bool is_lexical)
 }
 
 OP *
-hf_prepare_helemfast_lex(pTHX_ PADOFFSET hash_padoffset, SV *key)
+hf_prepare_helemfast_lex(pTHX_ CV *cv, PADOFFSET hash_padoffset, SV *key)
 {
-  helemfast_op_t *op = (helemfast_op_t *)hf_alloc_helemfast(aTHX_ true);
+  helemfast_op_t *op = (helemfast_op_t *)hf_alloc_helemfast(aTHX_ true, false);
 
   // FIXME Does this need a SvREFCNT_inc(key) ?
   op->op_targ = hash_padoffset;
   op->op_keysv = key;
   op->op_keyoffset = 0;
-  op->op_keyhash = 0; // FIXME precompute hash key
+
+  STRLEN len;
+  char *str = SvPVbyte(key, len);
+  PERL_HASH(op->op_keyhash, str, len);
 
   return (OP *)op;
 }
 
 OP *
-hf_prepare_helemfast_lex_padkey(pTHX_ PADOFFSET hash_padoffset, PADOFFSET key_padoffset)
+hf_prepare_helemfast_lex_padkey(pTHX_ CV *cv, PADOFFSET hash_padoffset, PADOFFSET key_padoffset)
 {
-  helemfast_op_t *op = (helemfast_op_t *)hf_alloc_helemfast(aTHX_ true);
+  helemfast_op_t *op = (helemfast_op_t *)hf_alloc_helemfast(aTHX_ true, true);
 
   // FIXME Does this need a SvREFCNT_inc(key) ?
   op->op_targ = hash_padoffset;
   op->op_keysv = NULL;
   op->op_keyoffset = key_padoffset;
   op->op_keyhash = 0; // FIXME precompute hash key
+
+  // Fake up curpad to be able to access PAD SV for hash precomputation
+  SV *keysv;
+  {
+    ENTER;
+    SAVECOMPPAD(); // restores both PL_comppad and PL_curpad
+
+    PL_comppad = PadlistARRAY(CvPADLIST(cv))[1];
+    PL_curpad = AvARRAY(PL_comppad);
+
+    keysv = PAD_SVl(key_padoffset);
+
+    LEAVE;
+  }
+
+  STRLEN len;
+  char *str = SvPVbyte(keysv, len);
+  PERL_HASH(op->op_keyhash, str, len);
 
   return (OP *)op;
 }
@@ -126,10 +157,6 @@ hf_prepare_helemfast_lex_padkey(pTHX_ PADOFFSET hash_padoffset, PADOFFSET key_pa
 void
 hf_init_global_state(pTHX)
 {
-  /* Setup our callback for cleaning up OPs during global cleanup */
-  //HF_orig_opfreehook = PL_opfreehook;
-  //PL_opfreehook = hf_op_free_hook;
-
   /* Setup our custom op */
   XopENTRY_set(&HF_helemfast_op, xop_name, "helemfast");
   XopENTRY_set(&HF_helemfast_op, xop_desc, "helemfast");
@@ -139,9 +166,11 @@ hf_init_global_state(pTHX)
   XopENTRY_set(&HF_helemfast_lex_op, xop_desc, "helemfast for lexical hashes");
   XopENTRY_set(&HF_helemfast_lex_op, xop_class, OA_BASEOP); /* ??? */
 
+  XopENTRY_set(&HF_helemfast_lex_pad_op, xop_name, "helemfast_lex_pad");
+  XopENTRY_set(&HF_helemfast_lex_pad_op, xop_desc, "helemfast for lexical hashes using a pad offset");
+  XopENTRY_set(&HF_helemfast_lex_pad_op, xop_class, OA_BASEOP); /* ??? */
+
   Perl_custom_op_register(aTHX_ hf_pp_helemfast, &HF_helemfast_op);
   Perl_custom_op_register(aTHX_ hf_pp_helemfast_lex, &HF_helemfast_lex_op);
-
-  /* Register super-late global cleanup hook for global state */
-  //Perl_call_atexit(aTHX_ ... cleanup function ..., NULL);
+  Perl_custom_op_register(aTHX_ hf_pp_helemfast_lex_pad, &HF_helemfast_lex_pad_op);
 }
