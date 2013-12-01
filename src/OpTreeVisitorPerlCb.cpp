@@ -30,8 +30,15 @@ OpTreeVisitorPerlCb::~OpTreeVisitorPerlCb()
   SvREFCNT_dec(perl_callback);
 }
 
+// Separated from invoke_perl_callback for inheritance
 OpTreeVisitor::visit_control_t
 OpTreeVisitorPerlCb::visit_op(pTHX_ OP *o, OP *parentop)
+{
+  return invoke_perl_callback(aTHX_ o, parentop);
+}
+
+OpTreeVisitor::visit_control_t
+OpTreeVisitorPerlCb::invoke_perl_callback(pTHX_ OP *o, OP *parentop)
 {
   dSP;
   const unsigned int nargs = 2;

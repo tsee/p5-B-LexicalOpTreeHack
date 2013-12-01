@@ -9,9 +9,12 @@
 class OpTreeVisitorPerlCb : public OpTreeVisitor {
 public:
   OpTreeVisitorPerlCb(pTHX_ CV *callback);
-  ~OpTreeVisitorPerlCb();
+  virtual ~OpTreeVisitorPerlCb();
 
-  visit_control_t visit_op(pTHX_ OP *o, OP *parentop);
+  virtual visit_control_t visit_op(pTHX_ OP *o, OP *parentop);
+
+protected:
+  visit_control_t invoke_perl_callback(pTHX_ OP *o, OP *parentop);
 
 private:
   // Need to keep threading context around for destructor which doesn't take a pTHX
