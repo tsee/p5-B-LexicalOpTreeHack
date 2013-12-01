@@ -129,3 +129,33 @@ COPFinder::get_cops() const
   return cop_list->get_cops();
 }
 
+
+
+COPFinderPerlCb::COPFinderPerlCb(pTHX_ CV *callback)
+  : OpTreeVisitorPerlCb(aTHX_ callback)
+{}
+
+COPFinderPerlCb::COPFinderPerlCb(pTHX_ CV *callback, const char *_hint_name)
+  : OpTreeVisitorPerlCb(aTHX_ callback),
+    cop_list(new HintedCOPList(_hint_name))
+{}
+
+COPFinderPerlCb::~COPFinderPerlCb()
+{
+  delete cop_list;
+}
+
+OpTreeVisitor::visit_control_t
+COPFinderPerlCb::visit_op(pTHX_ OP *o, OP *parentop)
+{
+  if (cop_list->maybe_add_op(aTHX_ o))
+    invoke_perl_callback(aTHX_ o, parentop);
+
+  return OpTreeVisitor::VISIT_CONT;
+}
+
+const std::vector<OP *> &
+COPFinderPerlCb::get_cops() const
+{
+  return cop_list->get_cops();
+}

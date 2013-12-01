@@ -25,4 +25,20 @@ private:
   HintedCOPList *cop_list;
 };
 
+
+class COPFinderPerlCb : protected OpTreeVisitorPerlCb {
+public:
+  // No hint name means "don't filter by hint, return all COPs"
+  COPFinderPerlCb(pTHX_ CV *callback);
+  // Hint name is automatically prefixed by the value of LO_prefix
+  COPFinderPerlCb(pTHX_ CV *callback, const char *_hint_name);
+  ~COPFinderPerlCb();
+
+  virtual visit_control_t visit_op(pTHX_ OP *o, OP *parentop);
+  const std::vector<OP *> &get_cops() const;
+
+private:
+  HintedCOPList *cop_list;
+};
+
 #endif
