@@ -1,12 +1,12 @@
-#ifndef FT_OPTREEVISITOR_H_
-#define FT_OPTREEVISITOR_H_
+#ifndef FT_OpTREEVISITOR_H_
+#define FT_OpTREEVISITOR_H_
 
 #include "EXTERN.h"
 #include "perl.h"
 
 /* Code relating to traversing and manipulating the OP tree */
 
-class OPTreeVisitor {
+class OpTreeVisitor {
 public:
   enum visit_control_t {
     VISIT_CONT = 0,

@@ -3,13 +3,13 @@
 
 #include "EXTERN.h"
 #include "perl.h"
-#include "OPTreeVisitor.h"
+#include "OpTreeVisitor.h"
 #include <vector>
 #include <string>
 
 /* Code relating to traversing and manipulating the OP tree */
 
-class COPFinder : public OPTreeVisitor {
+class COPFinder : public OpTreeVisitor {
 public:
   // No hint name means "don't filter by hint, return all COPs"
   COPFinder();

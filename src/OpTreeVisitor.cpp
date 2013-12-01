@@ -1,4 +1,4 @@
-#include "OPTreeVisitor.h"
+#include "OpTreeVisitor.h"
 #include "ppport.h"
 
 #include <list>
@@ -8,7 +8,7 @@
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
 
 void
-OPTreeVisitor::visit(pTHX_ OP *o, OP *parentop)
+OpTreeVisitor::visit(pTHX_ OP *o, OP *parentop)
 {
   visit_control_t status;
   OP *kid;
@@ -56,5 +56,5 @@ OPTreeVisitor::visit(pTHX_ OP *o, OP *parentop)
 
 done:
   return;
-} // end 'OPTreeVisitor::visit'
+} // end 'OpTreeVisitor::visit'
 

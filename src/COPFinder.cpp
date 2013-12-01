@@ -23,7 +23,7 @@ COPFinder::~COPFinder()
     delete hint_name;
 }
 
-OPTreeVisitor::visit_control_t
+OpTreeVisitor::visit_control_t
 COPFinder::visit_op(pTHX_ OP *o, OP *parentop)
 {
   // Not a pretty if/else if chain, with similar bodies,
@@ -61,7 +61,7 @@ COPFinder::visit_op(pTHX_ OP *o, OP *parentop)
     }
   }
 
-  return OPTreeVisitor::VISIT_CONT;
+  return OpTreeVisitor::VISIT_CONT;
 }
 
 const std::vector<OP *> &
