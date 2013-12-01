@@ -63,9 +63,13 @@ OpTreeVisitorPerlCb::visit_op(pTHX_ OP *o, OP *parentop)
 
   // Get status flag from return value
   if (count == 0)
-    retval = OpTreeVisitor::VISIT_CONT;
+      croak("Invalid return value of OP tree walker callback: "
+            "Need to return any of VISIT_CONT, VISIT_SKIP, VISIT_ABORT");
   else {
     SV *retv = POPs;
+    if (retv == NULL || retv == &PL_sv_undef)
+      croak("Invalid return value of OP tree walker callback: "
+            "Need to return any of VISIT_CONT, VISIT_SKIP, VISIT_ABORT");
     retval = (OpTreeVisitor::visit_control_t)SvIV(retv);
     if (retval != VISIT_CONT && retval != VISIT_SKIP && retval != VISIT_ABORT)
       croak("Invalid return value of OP tree walker callback: "
