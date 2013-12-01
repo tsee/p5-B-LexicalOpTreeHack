@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "OpTreeVisitorPerlCb.h"
+#include "COPFinder.h"
 
 %module{B::LexicalOpTreeHack};
 %package{B::OpTreeVisitor};
@@ -28,3 +29,10 @@
     %code{% THIS->visit(aTHX_ o, parent); %};
 };
 
+%name{B::OpTreeVisitor::CopFinder}
+class COPFinderPerlCb : protected OpTreeVisitorPerlCb {
+  %name{new} COPFinderPerlCb(CV *callback, const char *hint_name = NULL)
+    %code{% RETVAL = new COPFinderPerlCb(aTHX_ callback, hint_name); %};
+
+  ~COPFinderPerlCb();
+};
