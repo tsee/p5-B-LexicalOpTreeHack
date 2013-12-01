@@ -35,9 +35,9 @@ HintedCOPList::HintedCOPList()
 HintedCOPList::HintedCOPList(const char *_hint_name)
   : prev_hints_hash(NULL), prev_hh_had_hint(false)
 {
-  hint_name = _hint_name
-              ? new string(LO_prefix + string(_hint_name))
-              : NULL;
+  hint_name = _hint_name == NULL
+              ? NULL
+              : new string(LO_prefix + string(_hint_name));
 }
 
 HintedCOPList::~HintedCOPList()
@@ -63,14 +63,17 @@ HintedCOPList::clear_cops()
 bool
 HintedCOPList::maybe_add_op(pTHX_ OP *o)
 {
+  bool retval = false;
   // Not a pretty if/else if chain, with similar bodies,
   // but keeps things from becoming a ridiculous condition.
+  // FIXME this can be refactored a lot nicer with early returns
   if (o && OP_CLASS(o) == OA_COP)
   {
     COPHH *hh;
 
     if (hint_name == NULL) {
       cops.push_back(o);
+      retval = true;
     }
     else if (( hh = ((COP *)o)->cop_hints_hash) ) {
       // Optimization: Hit on our hobo-cache
@@ -78,6 +81,7 @@ HintedCOPList::maybe_add_op(pTHX_ OP *o)
         cops.push_back(o);
         prev_hints_hash = hh;
         prev_hh_had_hint = true;
+        retval = true;
       }
       else {
         // Could possibly optimize further by remembering the hash value for the hint name
@@ -89,14 +93,18 @@ HintedCOPList::maybe_add_op(pTHX_ OP *o)
           cops.push_back(o);
           prev_hints_hash = hh;
           prev_hh_had_hint = true;
+          retval = true;
         }
         else {
           prev_hints_hash = hh;
           prev_hh_had_hint = false;
+          retval = true;
         }
       }
     }
   }
+
+  return retval;
 }
 
 
@@ -132,7 +140,8 @@ COPFinder::get_cops() const
 
 
 COPFinderPerlCb::COPFinderPerlCb(pTHX_ CV *callback)
-  : OpTreeVisitorPerlCb(aTHX_ callback)
+  : OpTreeVisitorPerlCb(aTHX_ callback),
+    cop_list(new HintedCOPList())
 {}
 
 COPFinderPerlCb::COPFinderPerlCb(pTHX_ CV *callback, const char *_hint_name)
