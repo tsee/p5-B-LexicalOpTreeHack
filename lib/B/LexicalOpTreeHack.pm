@@ -9,7 +9,7 @@ use Exporter 'import';
 our @EXPORT_OK = qw(
   has_hint
 );
-our %EXPORT_ALL = (":all" => \@EXPORT_OK);
+our %EXPORT_TASG = ("all" => \@EXPORT_OK);
 
 require XSLoader;
 XSLoader::load("B::LexicalOpTreeHack", $VERSION);
