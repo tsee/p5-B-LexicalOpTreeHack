@@ -28,7 +28,3 @@
     %code{% THIS->visit(aTHX_ o, parent); %};
 };
 
-{%
-
-
-%}
