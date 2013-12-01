@@ -1,0 +1,34 @@
+/*
+# vim: ts=2 sw=2 et
+*/
+#define PERL_NO_GET_CONTEXT
+#include "EXTERN.h"
+#include "perl.h"
+#include "XSUB.h"
+
+#include "ppport.h"
+
+#include <assert.h>
+
+#include "OpTreeVisitorPerlCb.h"
+
+%module{B::LexicalOpTreeHack};
+%package{B::OpTreeVisitor};
+
+%name{B::OpTreeVisitor} class OpTreeVisitorPerlCb {
+  %name{new} OpTreeVisitorPerlCb(CV *callback)
+    %code{% RETVAL = new OpTreeVisitorPerlCb(aTHX_ callback); %};
+
+  ~OpTreeVisitorPerlCb();
+
+  void visit_cv(CV *func)
+    %code{% THIS->visit(aTHX_ CvROOT(func), CvROOT(func)); %};
+
+  void visit_op(OP *o, OP *parent)
+    %code{% THIS->visit(aTHX_ o, parent); %};
+};
+
+{%
+
+
+%}
