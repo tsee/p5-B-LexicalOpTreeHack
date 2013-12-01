@@ -12,7 +12,7 @@ use constant VISIT_SKIP  => 1;
 use constant VISIT_ABORT => 2;
 
 our @EXPORT_OK = qw(VISIT_CONT VISIT_SKIP VISIT_ABORT);
-our %EXPORT_ALL = (":all" => \@EXPORT_OK);
+our %EXPORT_TAGS = ("all" => \@EXPORT_OK);
 
 1;
 __END__
