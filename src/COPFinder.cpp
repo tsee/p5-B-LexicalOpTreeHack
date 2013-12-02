@@ -158,7 +158,7 @@ OpTreeVisitor::visit_control_t
 COPFinderPerlCb::visit_op(pTHX_ OP *o, OP *parentop)
 {
   if (cop_list->maybe_add_op(aTHX_ o))
-    invoke_perl_callback(aTHX_ o, parentop);
+    return invoke_perl_callback(aTHX_ o, parentop);
 
   return OpTreeVisitor::VISIT_CONT;
 }
