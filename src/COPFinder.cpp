@@ -99,7 +99,7 @@ HintedCOPList::maybe_add_op(pTHX_ OP *o)
   // Effectively inlined cop_has_hint()
   // Annoying: This creates and returns a mortal SV every time :(
   SV *hint_value = cophh_fetch_pvn(hh, hint_name->c_str(), hint_name->length(), 0, 0);
-  if (hint_value && hint_value != &PL_sv_placeholder && SvTRUE(hint_value))
+  if (hint_value && SvTRUE(hint_value))
   {
     cops.push_back(o);
     prev_hints_hash = hh;
@@ -109,13 +109,11 @@ HintedCOPList::maybe_add_op(pTHX_ OP *o)
   else {
     prev_hints_hash = hh;
     prev_hh_had_hint = false;
-    return true;
+    return false;
   }
 
   return false;
 }
-
-
 
 
 
