@@ -19,6 +19,7 @@ public:
   bool maybe_add_op(pTHX_ OP *o);
 
   const std::vector<OP *> &get_cops() const;
+  const std::string *get_hint_name() const;
   void clear_cops();
 
 private:
@@ -50,6 +51,12 @@ const std::vector<OP *> &
 HintedCOPList::get_cops() const
 {
   return cops;
+}
+
+const std::string *
+HintedCOPList::get_hint_name() const
+{
+  return hint_name;
 }
 
 void
