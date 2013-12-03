@@ -74,44 +74,45 @@ HintedCOPList::maybe_add_op(pTHX_ OP *o)
   // Not a pretty if/else if chain, with similar bodies,
   // but keeps things from becoming a ridiculous condition.
   // FIXME this can be refactored a lot nicer with early returns
-  if (o && OP_CLASS(o) == OA_COP)
-  {
-    COPHH *hh;
+  if (!o || OP_CLASS(o) != OA_COP)
+    return false;
 
-    if (hint_name == NULL) {
-      cops.push_back(o);
-      retval = true;
-    }
-    else if (( hh = ((COP *)o)->cop_hints_hash) ) {
-      // Optimization: Hit on our hobo-cache
-      if (hh == prev_hints_hash && prev_hh_had_hint) {
-        cops.push_back(o);
-        prev_hints_hash = hh;
-        prev_hh_had_hint = true;
-        retval = true;
-      }
-      else {
-        // Could possibly optimize further by remembering the hash value for the hint name
-        // Effectively inlined cop_has_hint()
-        // Annoying: This creates and returns a mortal SV every time :(
-        SV *hint_value = cophh_fetch_pvn(hh, hint_name->c_str(), hint_name->length(), 0, 0);
-        if (hint_value && hint_value != &PL_sv_placeholder && SvTRUE(hint_value))
-        {
-          cops.push_back(o);
-          prev_hints_hash = hh;
-          prev_hh_had_hint = true;
-          retval = true;
-        }
-        else {
-          prev_hints_hash = hh;
-          prev_hh_had_hint = false;
-          retval = true;
-        }
-      }
-    }
+  if (hint_name == NULL) {
+    cops.push_back(o);
+    return true;
   }
 
-  return retval;
+  COPHH *hh = ((COP *)o)->cop_hints_hash;
+
+  if (hh == NULL)
+    return false;
+
+  // Optimization: Hit on our hobo-cache
+  if (hh == prev_hints_hash && prev_hh_had_hint) {
+    cops.push_back(o);
+    prev_hints_hash = hh;
+    prev_hh_had_hint = true;
+    return true;
+  }
+
+  // Could possibly optimize further by remembering the hash value for the hint name
+  // Effectively inlined cop_has_hint()
+  // Annoying: This creates and returns a mortal SV every time :(
+  SV *hint_value = cophh_fetch_pvn(hh, hint_name->c_str(), hint_name->length(), 0, 0);
+  if (hint_value && hint_value != &PL_sv_placeholder && SvTRUE(hint_value))
+  {
+    cops.push_back(o);
+    prev_hints_hash = hh;
+    prev_hh_had_hint = true;
+    return true;
+  }
+  else {
+    prev_hints_hash = hh;
+    prev_hh_had_hint = false;
+    return true;
+  }
+
+  return false;
 }
 
 
